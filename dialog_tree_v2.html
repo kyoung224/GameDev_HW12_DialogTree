@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>Dialog - Gayoung Kim</title>
+
+<script type="application/javascript">
+// <![CDATA[
+
+var theCanvas;
+var theContext;
+var CANVASWIDTH = 640;
+var CANVASHEIGHT = 480;
+
+
+var mydialog = new Array();            // Array of options
+var prompt = "Select your response";   // Instructions for user
+var optionKeys = "ABCD";               // Possible options
+var optionKeyIndex = 0;                // Index into optionKeys
+                                       // (which option the user chose)
+var dialogA = "";
+var dialogB = "";
+var dialogC = "";
+var dialogD = "";
+var responseA = "";
+var responseB = "";
+var responseC = "";
+var responseD = "";
+var keepDialog = new Array();
+var keepResponse = new Array();
+var toAlibi = false;
+var toName = false;
+var toTime = false;
+var toEvidence = false;
+var toCar = false;
+var toFollowUp = false;
+var toWitness = false;
+var toEnd = false;
+var loop = false;
+var endloop = false;
+var flag = "";
+
+
+function show_dialog() {
+  var Yspace = 22;
+  var Yloc = 40;
+  var Xloc = 0;
+
+  theContext.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
+  theContext.fillStyle = "white";
+  theContext.font = "bold 16px Arial";
+
+  var line;
+
+  // Show the prompt
+  theContext.fillText(prompt, Xloc, Yloc);
+  Yloc += Yspace;
+
+  // Now show the options.
+  // Make sure that this does not show more options than supported (4).
+  for (var m=0; (m<mydialog.length) && (m<optionKeys.length); m++) {
+    // Build the line of text, e.g. if the first one has text "hello"
+    // then line should be "A. hello"
+    line = optionKeys[m] + ". " + mydialog[m].text;
+    // Show this line on the canvas
+    theContext.fillText(line, Xloc, Yloc);
+    // Update Yloc to the next line down.
+    // We do not update Xloc, since all lines should be left-justified.
+    Yloc += Yspace;
+  }
+}
+
+
+// Given a string (str), add it to the list of options.
+function add_to_options(str) {
+  mydialog.push({text:str});
+}
+
+
+// Given an index, remove the corresponding text from the list of options.
+function del_from_options(index) {
+  mydialog.splice(index, 1);
+}
+
+
+// The "paragraph" is literally a paragraph that shows on the screen.
+// This is mostly for debugging. It logs the user's interactions.
+// Given the string str, append it to the text in the paragraph.
+function add_to_paragraph(str) {
+  var oldstuff = document.getElementById("results").innerHTML;
+  // console.log("old stuff is " + oldstuff);
+  oldstuff += str;
+  document.getElementById("results").innerHTML = oldstuff;
+}
+
+
+// Call the function to process this input.
+function processResponse() {
+  var valid = false;
+
+  // The user pressed a key, and optionKeyIndex should be updated.
+  // First, make sure the key pressed is a valid choice.
+  if (optionKeyIndex > -1) {
+    // Is there an option for this key? E.g. this program expects that
+    // A, B, C, or D are valid choices, but if the options are "True" and
+    // "False" only, then C and D are invalid.
+    if (optionKeyIndex < mydialog.length) {
+
+      if (optionKeyIndex == 0){
+        add_to_paragraph("Dialog: " + dialogA + "<br>");
+        add_to_paragraph("Response: " + responseA + "<br>");
+        keepResponse.push(responseA);
+      } else if (optionKeyIndex == 1){
+        add_to_paragraph("Dialog: " + dialogB + "<br>");
+        add_to_paragraph("Response: " + responseB + "<br>");
+        keepResponse.push(responseB);
+      } else if (optionKeyIndex == 2){
+        add_to_paragraph("Dialog: " + dialogC + "<br>");
+        add_to_paragraph("Response: " + responseC + "<br>");
+        keepResponse.push(responseC);
+      } else if (optionKeyIndex == 3){
+        add_to_paragraph("Dialog: " + dialogD + "<br>");
+        add_to_paragraph("Response: " + responseD + "<br>");
+        keepResponse.push(responseD);
+      }
+    } else {
+      // Normally valid, but not for the current mydialog.
+
+      add_to_paragraph("Option " + optionKeys[optionKeyIndex]
+        + " selected, but no text for this.<br>");
+    }
+  }
+    // // If the user selects item 1, remove it from the list
+    // if (valid && (optionKeyIndex == 1)) {
+    //   del_from_options(1);
+    //   show_dialog();
+    // }
+  if (prompt === "Conversation Start"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toName = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toName = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+      toAlibi = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseD && responseD != ""){
+      toWitness = true;
+    }
+  } else if (prompt === "Demand An Alibi"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toName = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toEvidence = true;
+    }
+  } else if (prompt === "Name Of Bar"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toEvidence = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toTime = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+      toTime = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseD && responseD != ""){
+      toWitness = true;
+    }
+  } else if (prompt === "Time of Bar Visit"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toEvidence = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toEvidence = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+      toEvidence = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseD && responseD != ""){
+      toEnd = true;
+    }
+  } else if (prompt === "Ask About Evidence"){
+    console.log(keepResponse);
+    if (flag == "AB"){
+      if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+        toCar = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+        toEnd = true;
+      }
+    } else if (flag == "A"){
+      if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+        toEvidence = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+        toCar = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+        toEnd = true;
+      }
+    } else if (flag == "B"){
+      if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+        toEvidence = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+        toCar = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+        toEnd = true;
+      }
+    } else {
+      if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+        toEvidence = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+        toEvidence = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+        toCar = true;
+      } else if (keepResponse[keepResponse.length - 1] == responseD && responseD != ""){
+        toEnd = true;
+      }
+    }
+  } else if (prompt === "About the Car"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toFollowUp = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toFollowUp = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+      toFollowUp = true;
+    }
+  } else if (prompt === "Follow Up"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toCar = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toTime = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseC && responseC != ""){
+      toEnd = true;
+    }
+  } else if (prompt === "Obstructive Witness"){
+    if (keepResponse[keepResponse.length - 1] == responseA && responseA != ""){
+      toTime = true;
+    } else if (keepResponse[keepResponse.length - 1] == responseB && responseB != ""){
+      toEnd = true;
+    }
+  }
+  changeScene();
+}
+
+function changeScene(){
+  del_from_options(3);
+  del_from_options(2);
+  del_from_options(1);
+  del_from_options(0);
+  if (toAlibi){
+    demandAnAlibi();
+    toAlibi = false;
+  } else if(toName){
+    nameOfBar();
+    toName = false;
+  } else if (toTime){
+    timeOfBarVisit();
+    toTime = false;
+  } else if (toEvidence){
+    askAboutEvidence();
+    toEvidence = false;
+  } else if (toCar){
+    aboutTheCar();
+    toCar = false;
+  } else if (toFollowUp){
+    followUp();
+    toFollowUp = false;
+  } else if (toWitness){
+    obstructiveWitness();
+    toWitness = false;
+  } else if (toEnd){
+    document.bgColor = "#0f6000";
+    Fill = "#0f6000";
+  }
+}
+
+function conversationStart(){
+  prompt = "Conversation Start";
+
+  dialogA = "[Polite] We need your help to solve a crime. Were you on 3rd Street last night?";
+  dialogB = "[Neutral] What were you doing on 3rd Street last night?";
+  dialogC = "[Direct] We think you were involved in the shooting on 3rd Street last night.";
+  dialogD = "[Accusatory] Keane got shot last night. We know you did it, so start talking.";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+  add_to_options(dialogC);
+  add_to_options(dialogD);
+
+  responseA = "Yeah, I was coming home from a bar.";
+  responseB = "Getting drunk, what's it to you?";
+  responseC = "Hey, no way! Violence is not my thing, man.";
+  responseD = "That's garbage, and I'm saying nothing.";
+
+  show_dialog();
+}
+
+function demandAnAlibi(){
+  prompt = "Demand An Alibi";
+
+  dialogA = "[Sarcastic] Oh, yeah, you're a model citizen. You got an alibi?";
+  dialogB = "[Accusatory] That's not what your police record says. Where were you?";
+  dialogC = "";
+  dialogD = "";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+
+  responseA = "I was in a bar, OK?";
+  responseB = "Look, I was in a bar. 9 to midnight.";
+  responseC = "";
+  responseD = "";
+
+  show_dialog();
+}
+
+function nameOfBar(){
+  prompt = "Name Of Bar";
+
+  dialogA = "[Polite] That's good, we'll need the name of the bar.";
+  dialogB = "[Neutral] Yeah? What bar were you in?";
+  dialogC = "[Direct] You better not be lying. What's the name of the bar?";
+  dialogD = "[Accusatory] You weren't in any bar, you were in the alley shooting Keane.";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+  add_to_options(dialogC);
+  add_to_options(dialogD);
+
+  responseA = "I was in Foley's from 9 until midnight.";
+  responseB = "Foley's I'm there every night.";
+  responseC = "I ain't lying. It was Foley's Bar.";
+  responseD = "No I wasn't, and you've got nothing.";
+
+  show_dialog();
+}
+
+function timeOfBarVisit(){
+  prompt = "Time of Bar Visit";
+
+  dialogA = "[Polite] Can you tell us what time you were there, please?";
+  dialogB = "[Neutral] When did you get there, and how long did you stay?";
+  dialogC = "[Direct] You better hope Foley backs you up. When were you there?";
+  dialogD = "[Accusatory] So tell me some lies about when you were there.";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+  add_to_options(dialogC);
+  add_to_options(dialogD);
+
+  responseA = "Got there around 9, left around midnight.";
+  responseB = "Got there around 9, left around midnight.";
+  responseC = "9 to midnight. He'll remember me all right.";
+  responseD = "Forget it. I want a lawyer.";
+
+  show_dialog();
+}
+
+function askAboutEvidence(){
+  prompt = "Ask About Evidence";
+
+  if (keepResponse.includes("No, no shots. I'd remember shots.") &&
+      keepResponse.includes("Not that I remember")){
+
+    dialogA = "When you came out, did you see a blue car go by?";
+    dialogB = "That's all we want to know for now.";
+    dialogC = "";
+    dialogD = "";
+
+    del_from_options(3);
+    del_from_options(2);
+    del_from_options(1);
+    del_from_options(0);
+
+    add_to_options(dialogA);
+    add_to_options(dialogB);
+
+    responseA = "Yeah... going real fast! A sports car.";
+    responseB = "Good, 'cause I got places to be, you know?";
+    responseC = "";
+    responseD = "";
+
+    flag = "AB";
+    show_dialog();
+  } else if (keepResponse.includes("No, no shots. I'd remember shots.")){
+
+    dialogA = "We're trying to trace a tall man in jogging clothes. Did you see him?";
+    dialogB = "When you came out, did you see a blue car go by?";
+    dialogC = "That's all we want to know for now.";
+    dialogD = "";
+
+    del_from_options(3);
+    del_from_options(2);
+    del_from_options(1);
+    del_from_options(0);
+
+    add_to_options(dialogA);
+    add_to_options(dialogB);
+    add_to_options(dialogC);
+
+    responseA = "Not that I remember";
+    responseB = "Yeah... going real fast! A sports car.";
+    responseC = "Good, 'cause I got places to be, you know?'";
+    responseD = "";
+
+    flag = "A";
+    show_dialog();
+  } else if (keepResponse.includes("Not that I remember")){
+
+    dialogA = "Did you hear any shots around that time?";
+    dialogB = "When you came out, did you see a blue car go by?";
+    dialogC = "That's all we want to know for now.";
+    dialogD = "";
+
+    del_from_options(3);
+    del_from_options(2);
+    del_from_options(1);
+    del_from_options(0);
+
+    add_to_options(dialogA);
+    add_to_options(dialogB);
+    add_to_options(dialogC);
+
+    responseA = "No, no shots. I'd remember shots.";
+    responseB = "Yeah... going real fast! A sports car.";
+    responseC = "Good, 'cause I got places to be, you know?'";
+    responseD = "";
+
+    flag = "B";
+    show_dialog();
+
+  } else{
+
+    dialogA = "Did you hear any shots around that time?";
+    dialogB = "We're trying to trace a tall man in jogging clothes. Did you see him?";
+    dialogC = "When you came out, did you see a blue car go by?";
+    dialogD = "That's all we want to know for now.";
+
+    add_to_options(dialogA);
+    add_to_options(dialogB);
+    add_to_options(dialogC);
+    add_to_options(dialogD);
+
+    responseA = "No, no shots. I'd remember shots.";
+    responseB = "Not that I remember";
+    responseC = "Yeah... going real fast! A sports car.";
+    responseD = "Good, 'cause I got places to be, you know?'";
+
+    show_dialog();
+  }
+}
+
+function aboutTheCar(){
+  prompt = "About the Car";
+
+  dialogA = "Did you catch a look at the license plate?";
+  dialogB = "Do you remember the model? Foreign, domestic?";
+  dialogC = "Did you see the driver?";
+  dialogD = "";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+  add_to_options(dialogC);
+
+  responseA = "What, I got a photographic memory? No.";
+  responseB = "Maybe a Porsche. I'm not a car guy.";
+  responseC = "It was a man. That's all I can say.";
+  responseD = "";
+
+  show_dialog();
+}
+
+function followUp(){
+  prompt = "Follow Up";
+
+  dialogA = "I've got another question about the car.";
+  dialogB = "I need to ask you again about your alibi.";
+  dialogC = "All right, that'll do for now. Don't leave town.";
+  dialogD = "";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+  add_to_options(dialogC);
+
+  responseA = "Fire away.";
+  responseB = "It's not going to be any different.";
+  responseC = "Thanks for nothing.";
+  responseD = "";
+
+  show_dialog();
+}
+
+function obstructiveWitness(){
+  prompt = "Obstructive Witness";
+
+  dialogA = "[Direct] You're the prime suspect, unless you convince us otherwise.";
+  dialogB = "[Threatening] If you know who did it, you better talk or we'll charge you.";
+  dialogC = "";
+  dialogD = "";
+
+  add_to_options(dialogA);
+  add_to_options(dialogB);
+
+  responseA = "Yeah, well I was in Foley's bar.";
+  responseB = "Fine, charge me. I want a lawyer.";
+  responseC = "";
+  responseD = "";
+
+  show_dialog();
+}
+
+
+// ************************************************************************
+//      Start of key-press functions
+// ************************************************************************
+  //
+  // Set up a function to handle key-presses.
+  //
+  // This should work across most browsers.
+  document['onkeydown'] = function(event) {
+
+    event = event || window.event;
+    var key = event.which || event.cursor;
+
+    if (toEnd == false){
+      whenKeyPressed(key);
+    }
+  };
+
+
+  function whenKeyPressed(key) {
+
+    switch (key) {
+      case 65:   // 'A'
+        // Option A selected
+        console.log("Option A selected");
+        optionKeyIndex = 0;
+        break;
+      case 66:   // 'B'
+        // Option B selected
+        console.log("Option B selected");
+        optionKeyIndex = 1;
+        break;
+      case 67:   // 'C'
+        // Option C selected
+        console.log("Option C selected");
+        optionKeyIndex = 2;
+        break;
+      case 68:   // 'D'
+        // Option D selected
+        console.log("Option D selected");
+        optionKeyIndex = 3;
+        break;
+      default:
+        add_to_paragraph("Unexpected key " + key + "<br>");
+        optionKeyIndex = -1;
+        break;
+    }
+    // Call the function to process this input in the context of the prompt
+    // (i.e. further the player's conversation)
+    processResponse();
+  }
+
+//]]>
+</script>
+
+
+</head>
+<body bgcolor="#020202" text="#ffffff">
+<!-- <body bgcolor="#ffffff" text="#00ff00"> -->
+
+
+<center>
+<script type="application/javascript">
+  document.writeln("Dialog tree v2<br>");
+
+  // Make the main canvas.
+  document.writeln('<canvas id="theCanvas" tabindex="1" width="'
+    + CANVASWIDTH + '" height="'+ CANVASHEIGHT + '">');
+  document.writeln('<\/canvas>');
+  // Defining theContext
+  theCanvas = document.getElementById("theCanvas");
+  theContext = theCanvas.getContext("2d");
+
+
+  document.writeln('<p id="results">Results:<br></p>');
+  //document.writeln('<p id="results">no results yet</p>');
+  //  document.getElementById("results").innerHtml = "";
+
+  // Populate the list of options.
+  conversationStart();
+
+  // Draw the list of options on the canvas.
+  show_dialog();
+
+  //window.onload = splashScreen();
+</script>
+</center>
+
+
+
+</body>
+</html>
