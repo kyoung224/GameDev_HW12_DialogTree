@@ -2,4 +2,4 @@
 
 Starting code given by professor, Michael Weeks.
 
-Directions: Make a Dialog tree following the Dialog chart 
+Directions: https://hallertau.cs.gsu.edu/~mweeks/csc4821/HW12.html
